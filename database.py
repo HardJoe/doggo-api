@@ -12,7 +12,7 @@ class Dog(Base):
     # Define To Do class inheriting from Base
     __tablename__ = 'dogs'
     id = Column(Integer, primary_key=True, nullable=False)
-    name = Column(String(30), nullable=False)
+    name = Column(String(50), unique=True, nullable=False)
     breed = Column(String(50))
-    age = Column(Integer())
+    age = Column(Integer)
     image = Column(String(100))
