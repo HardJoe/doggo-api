@@ -1,7 +1,6 @@
 from pydantic import BaseModel
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, UploadFile, status
 from fastapi.responses import FileResponse, JSONResponse
-from fastapi_crudrouter import MemoryCRUDRouter as CRUDRouter
 
 
 class Dog(BaseModel):
@@ -11,13 +10,36 @@ class Dog(BaseModel):
 
 
 app = FastAPI()
-app.include_router(CRUDRouter(schema=Dog))
-image_id = 1
 
 
 @app.get("/")
 async def root():
     return {"message": "Welcome to doggo-api!"}
+
+
+@app.get("/dogs")
+def read_dogs_list():
+    return "read dogs list"
+
+
+@app.get("/dogs/{id}")
+def read_dog(id: int):
+    return "read dogs item with id {id}"
+
+
+@app.post("/dogs", status_code=status.HTTP_201_CREATED)
+def create_dog():
+    return "create dogs item"
+
+
+@app.put("/dogs/{id}")
+def update_dog(id: int):
+    return "update dogs item with id {id}"
+
+
+@app.delete("/dogs/{id}")
+def delete_dog(id: int):
+    return "delete dogs item with id {id}"
 
 
 @app.get("/images/{id}")
