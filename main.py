@@ -110,7 +110,22 @@ def update_dog(id: int, dog_req: DogRequest):
 
 @app.delete("/dogs/{id}")
 def delete_dog(id: int):
-    return "delete dogs item with id {id}"
+    # create a new database session
+    session = Session(bind=engine, expire_on_commit=False)
+
+    # get the dog item with the given id
+    dog = session.query(Dog).get(id)
+
+    # if dog item with given id exists, delete it from the database. Otherwise raise 404 error
+    if dog:
+        session.delete(dog)
+        session.commit()
+        session.close()
+    else:
+        raise HTTPException(
+            status_code=404, detail=f"dog item with id {id} not found")
+
+    return None
 
 
 @app.get("/images/{id}")
