@@ -81,8 +81,31 @@ def create_dog(dog: DogRequest):
 
 
 @app.put("/dogs/{id}")
-def update_dog(id: int):
-    return "update dogs item with id {id}"
+def update_dog(id: int, dog_req: DogRequest):
+    # create a new database session
+    session = Session(bind=engine, expire_on_commit=False)
+
+    # get the dog item with the given id
+    dog = session.query(Dog).get(id)
+
+    # update dog item with the given task
+    # (if an item with the given id was found)
+    if dog:
+        dog.name = dog_req.name
+        dog.breed = dog_req.breed
+        dog.age = dog_req.age
+        session.commit()
+
+    # close the session
+    session.close()
+
+    # check if dog item with given id exists
+    # If not, raise exception and return 404 not found response
+    if not dog:
+        raise HTTPException(
+            status_code=404, detail=f"dog item with id {id} not found")
+
+    return dog
 
 
 @app.delete("/dogs/{id}")
