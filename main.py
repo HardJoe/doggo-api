@@ -1,5 +1,5 @@
 from database import Base, engine, Dog
-from fastapi import FastAPI, File, UploadFile, status
+from fastapi import FastAPI, File, UploadFile, status, HTTPException
 from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -10,7 +10,6 @@ class DogRequest(BaseModel):
     name: str
     breed: str
     age: int
-    image: str
 
 
 # Create the database
@@ -27,7 +26,7 @@ async def root():
 
 @app.get("/dogs")
 def read_dogs_list():
-     # create a new database session
+    # create a new database session
     session = Session(bind=engine, expire_on_commit=False)
 
     # get all dogs items
@@ -41,7 +40,22 @@ def read_dogs_list():
 
 @app.get("/dogs/{id}")
 def read_dog(id: int):
-    return "read dogs item with id {id}"
+    # create a new database session
+    session = Session(bind=engine, expire_on_commit=False)
+
+    # get the dog item with the given id
+    dog = session.query(Dog).get(id)
+
+    # close the session
+    session.close()
+
+    # check if dog item with given id exists
+    # If not, raise exception and return 404 not found response
+    if not dog:
+        raise HTTPException(
+            status_code=404, detail=f"dog item with id {id} not found")
+
+    return dog
 
 
 @app.post("/dogs", status_code=status.HTTP_201_CREATED)
@@ -62,8 +76,8 @@ def create_dog(dog: DogRequest):
     # close the session
     session.close()
 
-    # return the id
-    return f"created dog item with id {id}"
+    # return the dog
+    return dogdb
 
 
 @app.put("/dogs/{id}")
