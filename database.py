@@ -14,4 +14,5 @@ class Dog(Base):
     id = Column(Integer, primary_key=True, nullable=False)
     name = Column(String(30), nullable=False)
     breed = Column(String(50))
+    age = Column(Integer())
     image = Column(String(100))
