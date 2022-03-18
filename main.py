@@ -1,15 +1,10 @@
-from database import Base, engine, Dog
+from database import Base, engine
 from fastapi import FastAPI, File, UploadFile, status, HTTPException
 from fastapi.responses import FileResponse, JSONResponse
-from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
-
-class DogRequest(BaseModel):
-    # Create DogRequest Base Model
-    name: str
-    breed: str
-    age: int
+from models import Dog, Image
+from schemas import DogRequest, ImageRequest
 
 
 # Create the database
@@ -69,9 +64,6 @@ def create_dog(dog: DogRequest):
     # add it to the session and commit it
     session.add(dogdb)
     session.commit()
-
-    # grab the id given to the object from the database
-    id = dogdb.id
 
     # close the session
     session.close()
