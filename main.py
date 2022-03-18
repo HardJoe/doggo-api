@@ -98,7 +98,7 @@ def update_dog(id: int, dog_req: DogRequest, session: Session = Depends(get_sess
     return dog
 
 
-@app.delete("/dogs/{id}")
+@app.delete("/dogs/{id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_dog(id: int, session: Session = Depends(get_session)):
     # get the dog item with the given id
     dog = session.query(Dog).get(id)
@@ -153,3 +153,21 @@ async def upload_image(file: UploadFile, session: Session = Depends(get_session)
 
     # return the image
     return imagedb
+
+
+@app.delete("/images/{id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_image(id: int, session: Session = Depends(get_session)):
+    # get the image item with the given id
+    image = session.query(Image).get(id)
+
+    # if image item with given id exists, delete it from the database. Otherwise raise 404 error
+    if image:
+        os.remove(image.path)
+        session.delete(image)
+        session.commit()
+        session.close()
+    else:
+        raise HTTPException(
+            status_code=404, detail=f"image item with id {id} not found")
+
+    return None
