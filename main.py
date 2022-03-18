@@ -1,6 +1,8 @@
+import os
+
 from database import Base, engine, SessionLocal
 from fastapi import FastAPI, File, UploadFile, status, HTTPException, Depends
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from models import Dog, Image
@@ -114,18 +116,40 @@ def delete_dog(id: int, session: Session = Depends(get_session)):
 
 
 @app.get("/images/{id}")
-async def get_image(id: int):
-    return FileResponse(f"./static/images/{id}.png")
+def get_image(id: int, session: Session = Depends(get_session)):
+    # get the image item with the given id
+    image = session.query(Image).get(id)
+
+    # close the session
+    session.close()
+
+    # check if image item with given id exists
+    # If not, raise exception and return 404 not found response
+    if not image:
+        raise HTTPException(
+            status_code=404, detail=f"image item with id {id} not found")
+
+    return FileResponse(image.path)
 
 
-@app.post("/images")
-async def upload_file(file: UploadFile = File(...)):
-    global image_id
-    file_path = f"./static/images/{image_id}.png"
+@app.post("/images", status_code=status.HTTP_201_CREATED)
+async def upload_image(file: UploadFile, session: Session = Depends(get_session)):
+    # save image in static directory
+    file_path = f"./static/images/{file.filename}"
     with open(file_path, 'wb') as image:
         content = await file.read()
         image.write(content)
         image.close()
-    image_id += 1
-    return JSONResponse(content={"filename": f"{image_id}.png"},
-                        status_code=201)
+
+    # create an instance of the Image database model
+    imagedb = Image(path=file_path)
+
+    # add it to the session and commit it
+    session.add(imagedb)
+    session.commit()
+
+    # close the session
+    session.close()
+
+    # return the image
+    return imagedb
