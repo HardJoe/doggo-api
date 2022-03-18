@@ -1,5 +1,5 @@
-from database import Base, engine
-from fastapi import FastAPI, File, UploadFile, status, HTTPException
+from database import Base, engine, SessionLocal
+from fastapi import FastAPI, File, UploadFile, status, HTTPException, Depends
 from fastapi.responses import FileResponse, JSONResponse
 from sqlalchemy.orm import Session
 
@@ -14,16 +14,21 @@ Base.metadata.create_all(engine)
 app = FastAPI()
 
 
+def get_session():
+    session = SessionLocal()
+    try:
+        yield session
+    finally:
+        session.close()
+
+
 @app.get("/")
 async def root():
     return {"message": "Welcome to doggo-api!"}
 
 
 @app.get("/dogs")
-def read_dogs_list():
-    # create a new database session
-    session = Session(bind=engine, expire_on_commit=False)
-
+def read_dogs_list(session: Session = Depends(get_session)):
     # get all dogs items
     dogs_list = session.query(Dog).all()
 
@@ -34,10 +39,7 @@ def read_dogs_list():
 
 
 @app.get("/dogs/{id}")
-def read_dog(id: int):
-    # create a new database session
-    session = Session(bind=engine, expire_on_commit=False)
-
+def read_dog(id: int, session: Session = Depends(get_session)):
     # get the dog item with the given id
     dog = session.query(Dog).get(id)
 
@@ -54,10 +56,7 @@ def read_dog(id: int):
 
 
 @app.post("/dogs", status_code=status.HTTP_201_CREATED)
-def create_dog(dog: DogRequest):
-    # create a new database session
-    session = Session(bind=engine, expire_on_commit=False)
-
+def create_dog(dog: DogRequest, session: Session = Depends(get_session)):
     # create an instance of the Dog database model
     dogdb = Dog(name=dog.name, breed=dog.breed, age=dog.age)
 
@@ -73,10 +72,7 @@ def create_dog(dog: DogRequest):
 
 
 @app.put("/dogs/{id}")
-def update_dog(id: int, dog_req: DogRequest):
-    # create a new database session
-    session = Session(bind=engine, expire_on_commit=False)
-
+def update_dog(id: int, dog_req: DogRequest, session: Session = Depends(get_session)):
     # get the dog item with the given id
     dog = session.query(Dog).get(id)
 
@@ -101,10 +97,7 @@ def update_dog(id: int, dog_req: DogRequest):
 
 
 @app.delete("/dogs/{id}")
-def delete_dog(id: int):
-    # create a new database session
-    session = Session(bind=engine, expire_on_commit=False)
-
+def delete_dog(id: int, session: Session = Depends(get_session)):
     # get the dog item with the given id
     dog = session.query(Dog).get(id)
 

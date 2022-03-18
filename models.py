@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, String, ForeignKey
 from database import Base
 
 
+# Define To Do class inheriting from Base
 class Dog(Base):
     __tablename__ = "dogs"
     id = Column(Integer, primary_key=True, nullable=False)
